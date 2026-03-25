@@ -105,6 +105,22 @@ const Auth = () => {
           </button>
         </form>
 
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+          <div className="relative flex justify-center"><span className="bg-card px-3 text-xs text-muted-foreground">{t("orContinueWith")}</span></div>
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={async () => { const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin }); if (error) toast.error(String(error)); }}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-border rounded-xl hover:bg-secondary transition-colors text-sm">
+            <span className="font-bold text-lg">G</span> Google
+          </button>
+          <button onClick={async () => { const { error } = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin }); if (error) toast.error(String(error)); }}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-border rounded-xl hover:bg-secondary transition-colors text-sm">
+            <span className="font-bold text-lg">🍎</span> Apple
+          </button>
+        </div>
+
         <div className="mt-4 text-center">
           <button onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-muted-foreground hover:text-foreground">
             {isSignUp ? t("haveAccount") : t("noAccount")} <span className="text-primary font-medium">{isSignUp ? t("signIn") : t("signUp")}</span>
