@@ -158,6 +158,39 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       shop_settings: {
         Row: {
           contact_email: string | null
@@ -170,6 +203,7 @@ export type Database = {
           shop_name: string
           updated_at: string
           working_hours: string | null
+          working_hours_json: Json | null
         }
         Insert: {
           contact_email?: string | null
@@ -182,6 +216,7 @@ export type Database = {
           shop_name?: string
           updated_at?: string
           working_hours?: string | null
+          working_hours_json?: Json | null
         }
         Update: {
           contact_email?: string | null
@@ -194,6 +229,7 @@ export type Database = {
           shop_name?: string
           updated_at?: string
           working_hours?: string | null
+          working_hours_json?: Json | null
         }
         Relationships: []
       }
