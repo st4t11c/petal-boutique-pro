@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { lovable } from "@/integrations/lovable/index";
 
 const Auth = () => {
   const { t } = useLanguage();
