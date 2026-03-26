@@ -29,6 +29,9 @@ const Footer = () => {
 
   const open = isCurrentlyOpen();
 
+  const googleMapsUrl = (location: string) =>
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+
   return (
     <footer className="border-t border-border bg-card/50 mt-auto">
       <div className="container mx-auto px-4 py-8">
@@ -37,7 +40,7 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-3" style={{ fontFamily: "Space Grotesk" }}>
               <span className="text-primary">THE</span> SHOP
             </h3>
-            <p className="text-sm text-muted-foreground">{settings?.description || "Premium curated products"}</p>
+            <p className="text-sm text-muted-foreground">{settings?.description || t("heroSubtitle")}</p>
             <div className="mt-3 flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${open ? "bg-green-500" : "bg-red-500"}`} />
               <span className={`text-sm font-medium ${open ? "text-green-500" : "text-red-500"}`}>
@@ -64,22 +67,31 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-3 text-sm">{t("connectedAccounts")}</h4>
+            <h4 className="font-semibold mb-3 text-sm">{t("contactUs")}</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
               {settings?.location && (
-                <div className="flex items-center gap-2"><MapPin className="w-4 h-4" />{settings.location}</div>
+                <a href={googleMapsUrl(settings.location)} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <MapPin className="w-4 h-4 shrink-0" /><span className="underline underline-offset-2">{settings.location}</span>
+                </a>
               )}
               {settings?.contact_email && (
-                <div className="flex items-center gap-2"><Mail className="w-4 h-4" />{settings.contact_email}</div>
+                <a href={`mailto:${settings.contact_email}`}
+                  className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <Mail className="w-4 h-4 shrink-0" /><span className="underline underline-offset-2">{settings.contact_email}</span>
+                </a>
               )}
               {settings?.contact_phone && (
-                <div className="flex items-center gap-2"><Phone className="w-4 h-4" />{settings.contact_phone}</div>
+                <a href={`tel:${settings.contact_phone}`}
+                  className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <Phone className="w-4 h-4 shrink-0" /><span className="underline underline-offset-2">{settings.contact_phone}</span>
+                </a>
               )}
             </div>
           </div>
         </div>
         <div className="border-t border-border mt-6 pt-4 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} THE SHOP. All rights reserved.
+          © {new Date().getFullYear()} THE SHOP. {t("allRightsReserved")}
         </div>
       </div>
     </footer>

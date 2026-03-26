@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate } from "react-router-dom";
-import { User, Lock, Clock, Link as LinkIcon } from "lucide-react";
+import { User, Lock, Clock, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -19,6 +19,7 @@ const Settings = () => {
   const [profile, setProfile] = useState({ first_name: "", last_name: "", username: "", phone: "" });
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [hours, setHours] = useState<Record<string, { open: string; close: string; is_open: boolean }>>({});
+  const [contact, setContact] = useState({ contact_email: "", contact_phone: "", location: "" });
 
   const { data: profileData } = useQuery({
     queryKey: ["profile", user?.id],
@@ -43,6 +44,7 @@ const Settings = () => {
 
   useEffect(() => {
     if (shopSettings?.working_hours_json) setHours(shopSettings.working_hours_json as any);
+    if (shopSettings) setContact({ contact_email: shopSettings.contact_email || "", contact_phone: shopSettings.contact_phone || "", location: shopSettings.location || "" });
   }, [shopSettings]);
 
   if (!user) return <Navigate to="/auth" />;
@@ -50,35 +52,43 @@ const Settings = () => {
   const saveProfile = async () => {
     const { error } = await supabase.from("profiles").update(profile).eq("user_id", user.id);
     if (error) toast.error(error.message);
-    else { toast.success("Profile updated!"); qc.invalidateQueries({ queryKey: ["profile"] }); }
+    else { toast.success(t("profileUpdated")); qc.invalidateQueries({ queryKey: ["profile"] }); }
   };
 
   const changePassword = async () => {
-    if (passwords.new !== passwords.confirm) { toast.error("Passwords don't match"); return; }
+    if (passwords.new !== passwords.confirm) { toast.error(t("passwordsNoMatch")); return; }
     const { error } = await supabase.auth.updateUser({ password: passwords.new });
     if (error) toast.error(error.message);
-    else { toast.success("Password updated!"); setPasswords({ current: "", new: "", confirm: "" }); }
+    else { toast.success(t("passwordUpdated")); setPasswords({ current: "", new: "", confirm: "" }); }
   };
 
   const saveHours = async () => {
     if (!shopSettings) return;
     const { error } = await supabase.from("shop_settings").update({ working_hours_json: hours as any }).eq("id", shopSettings.id);
     if (error) toast.error(error.message);
-    else { toast.success("Working hours updated!"); qc.invalidateQueries({ queryKey: ["shop-settings"] }); }
+    else { toast.success(t("hoursUpdated")); qc.invalidateQueries({ queryKey: ["shop-settings"] }); }
+  };
+
+  const saveContact = async () => {
+    if (!shopSettings) return;
+    const { error } = await supabase.from("shop_settings").update(contact).eq("id", shopSettings.id);
+    if (error) toast.error(error.message);
+    else { toast.success(t("profileUpdated")); qc.invalidateQueries({ queryKey: ["shop-settings"] }); }
   };
 
   const sidebarItems = [
     { id: "profile", label: t("profile"), icon: <User className="w-4 h-4" /> },
     { id: "security", label: t("security"), icon: <Lock className="w-4 h-4" /> },
-    ...(isAdmin ? [{ id: "hours", label: t("workingHours"), icon: <Clock className="w-4 h-4" /> }] : []),
-    { id: "connected", label: t("connectedAccounts"), icon: <LinkIcon className="w-4 h-4" /> },
+    ...(isAdmin ? [
+      { id: "hours", label: t("workingHours"), icon: <Clock className="w-4 h-4" /> },
+      { id: "contact", label: t("contactUs"), icon: <MessageSquare className="w-4 h-4" /> },
+    ] : []),
   ];
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6" style={{ fontFamily: "Space Grotesk" }}>{t("settings")}</h1>
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar */}
         <div className="md:w-56 shrink-0">
           <div className="bg-card border border-border rounded-xl p-2 space-y-1">
             {sidebarItems.map((item) => (
@@ -90,7 +100,6 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Content */}
         <motion.div key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
           className="flex-1 bg-card border border-border rounded-2xl p-6">
           {activeTab === "profile" && (
@@ -163,26 +172,25 @@ const Settings = () => {
             </div>
           )}
 
-          {activeTab === "connected" && (
+          {activeTab === "contact" && isAdmin && (
             <div className="space-y-4 max-w-md">
-              <h2 className="text-lg font-semibold">{t("connectedAccounts")}</h2>
-              <p className="text-sm text-muted-foreground">Manage your connected accounts and linked services.</p>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center text-xs font-bold">G</div>
-                    <span className="text-sm">Google</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Coming soon</span>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-border rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center text-xs font-bold">A</div>
-                    <span className="text-sm">Apple</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Coming soon</span>
-                </div>
+              <h2 className="text-lg font-semibold">{t("contactUs")}</h2>
+              <div>
+                <label className="block text-sm mb-1">{t("email")}</label>
+                <input value={contact.contact_email} onChange={(e) => setContact({ ...contact, contact_email: e.target.value })}
+                  className="w-full p-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary" />
               </div>
+              <div>
+                <label className="block text-sm mb-1">{t("phone")}</label>
+                <input value={contact.contact_phone} onChange={(e) => setContact({ ...contact, contact_phone: e.target.value })}
+                  className="w-full p-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary" />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">{t("address")}</label>
+                <input value={contact.location} onChange={(e) => setContact({ ...contact, location: e.target.value })}
+                  className="w-full p-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary" />
+              </div>
+              <button onClick={saveContact} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium">{t("save")}</button>
             </div>
           )}
         </motion.div>

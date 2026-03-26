@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigate } from "react-router-dom";
-import { Package, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 const MyOrders = () => {
   const { user } = useAuth();
@@ -32,7 +32,7 @@ const MyOrders = () => {
       ) : orders.length === 0 ? (
         <div className="text-center py-12">
           <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">No orders yet</p>
+          <p className="text-muted-foreground">{t("noOrdersYet")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -42,14 +42,14 @@ const MyOrders = () => {
               <div className="flex items-center justify-between mb-2">
                 <p className="font-medium text-sm">#{order.id.slice(0, 8)}</p>
                 <span className={`text-xs px-2 py-1 rounded-full ${order.status === "approved" ? "bg-green-500/20 text-green-500" : order.status === "denied" ? "bg-red-500/20 text-red-500" : order.status === "delivered" ? "bg-blue-500/20 text-blue-500" : "bg-yellow-500/20 text-yellow-500"}`}>
-                  {order.status}
+                  {t(order.status)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
                 <span className="text-primary font-bold">${order.total}</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{t("fulfillment")}: {order.fulfillment}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("fulfillment")}: {t(order.fulfillment)}</p>
             </motion.div>
           ))}
         </div>
