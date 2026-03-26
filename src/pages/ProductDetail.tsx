@@ -28,7 +28,7 @@ const ProductDetail = () => {
   const { data: extraImages = [] } = useQuery({
     queryKey: ["product-images", id],
     queryFn: async () => {
-      const { data } = await supabase.from("product_images").select("*").eq("product_id", id!).order("sort_order");
+      const { data } = await (supabase as any).from("product_images").select("*").eq("product_id", id!).order("sort_order");
       return data || [];
     },
     enabled: !!id,

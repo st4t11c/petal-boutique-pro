@@ -82,14 +82,14 @@ const Dashboard = () => {
       // Upload additional images
       if (additionalFiles.length > 0) {
         const existingImages = editingProduct
-          ? (await supabase.from("product_images").select("sort_order").eq("product_id", productId).order("sort_order", { ascending: false }).limit(1)).data
+          ? (await (supabase as any).from("product_images").select("sort_order").eq("product_id", productId).order("sort_order", { ascending: false }).limit(1)).data
           : [];
         let sortOrder = existingImages?.[0]?.sort_order ?? 0;
 
         for (const file of additionalFiles) {
           const url = await uploadFile(file);
           sortOrder++;
-          await supabase.from("product_images").insert({ product_id: productId, image_url: url, sort_order: sortOrder });
+          await (supabase as any).from("product_images").insert({ product_id: productId, image_url: url, sort_order: sortOrder });
         }
       }
 
