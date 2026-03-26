@@ -23,7 +23,6 @@ const Home = () => {
     <div className="relative">
       {/* Hero */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        {/* Animated gradient background */}
         <div className="absolute inset-0">
           <motion.div
             animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
@@ -34,25 +33,18 @@ const Home = () => {
               backgroundSize: "200% 200%",
             }}
           />
-          {/* Grid pattern */}
           <div className="absolute inset-0 opacity-[0.03]"
             style={{ backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
         </div>
 
-        {/* Floating icons */}
         {floatingIcons.map(({ Icon, delay, x, y }, i) => (
-          <motion.div
-            key={i}
-            className="absolute text-primary/20"
-            style={{ left: x, top: y }}
+          <motion.div key={i} className="absolute text-primary/20" style={{ left: x, top: y }}
             animate={{ y: [0, -30, 0], rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 5 + i, repeat: Infinity, delay, ease: "easeInOut" }}
-          >
+            transition={{ duration: 5 + i, repeat: Infinity, delay, ease: "easeInOut" }}>
             <Icon className="w-8 h-8 md:w-12 md:h-12" />
           </motion.div>
         ))}
 
-        {/* Hero content */}
         <div className="relative z-10 text-center px-4">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter mb-4" style={{ fontFamily: "Space Grotesk" }}>
@@ -77,7 +69,6 @@ const Home = () => {
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
         <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2">
           <div className="w-6 h-10 border-2 border-muted-foreground/30 rounded-full flex items-start justify-center pt-2">
@@ -93,16 +84,16 @@ const Home = () => {
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: <Package className="w-8 h-8" />, title: "Premium Quality", desc: "Hand-picked products for the discerning customer" },
-              { icon: <Truck className="w-8 h-8" />, title: "Fast Delivery", desc: "Quick and reliable delivery to your doorstep" },
-              { icon: <CreditCard className="w-8 h-8" />, title: "Secure Payment", desc: "Multiple secure payment options available" },
+              { icon: <Package className="w-8 h-8" />, titleKey: "premiumQuality", descKey: "premiumQualityDesc" },
+              { icon: <Truck className="w-8 h-8" />, titleKey: "fastDelivery", descKey: "fastDeliveryDesc" },
+              { icon: <CreditCard className="w-8 h-8" />, titleKey: "securePayment", descKey: "securePaymentDesc" },
             ].map((f, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.2 }}
                 className="bg-card border border-border rounded-2xl p-6 text-center hover:border-primary/50 transition-colors">
                 <div className="text-primary mb-4 flex justify-center">{f.icon}</div>
-                <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                <p className="text-sm text-muted-foreground">{f.desc}</p>
+                <h3 className="font-semibold text-lg mb-2">{t(f.titleKey)}</h3>
+                <p className="text-sm text-muted-foreground">{t(f.descKey)}</p>
               </motion.div>
             ))}
           </motion.div>

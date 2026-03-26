@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { Navigate } from "react-router-dom";
-import { Package, ShoppingCart, DollarSign, AlertTriangle, Search, Check, X, Plus, Edit2, Trash2, Upload, Link as LinkIcon } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, AlertTriangle, Search, Check, X, Plus, Edit2, Trash2, Upload, Link as LinkIcon, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -20,6 +20,7 @@ const Dashboard = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [imageMode, setImageMode] = useState<"url" | "upload">("url");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
   const [pf, setPf] = useState({ name: "", description: "", price: "", stock: "", category: "Uncategorized", badge: "", image_url: "", is_active: true });
 
   if (!user || !isAdmin) return <Navigate to="/" />;
@@ -44,54 +45,75 @@ const Dashboard = () => {
     },
     onSuccess: (_, { status }) => {
       qc.invalidateQueries({ queryKey: ["orders"] });
-      addNotification({ title: status === "approved" ? t("orderApproved") : t("orderDenied"), message: `Order status updated to ${status}`, type: status === "approved" ? "approval" : "denial" });
-      toast.success("Order updated!");
+      addNotification({ title: status === "approved" ? t("orderApproved") : t("orderDenied"), message: `${t("status")}: ${t(status)}`, type: status === "approved" ? "approval" : "denial" });
+      toast.success(t("orderUpdated"));
     },
   });
+
+  const uploadFile = async (file: File): Promise<string> => {
+    const ext = file.name.split(".").pop();
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("product-images").upload(path, file);
+    if (error) throw error;
+    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+    return urlData.publicUrl;
+  };
 
   const handleSaveProduct = async () => {
     try {
       let imageUrl = pf.image_url;
       if (imageMode === "upload" && imageFile) {
-        const ext = imageFile.name.split(".").pop();
-        const path = `${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("product-images").upload(path, imageFile);
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-        imageUrl = urlData.publicUrl;
+        imageUrl = await uploadFile(imageFile);
       }
 
       const productData = { name: pf.name, description: pf.description || null, price: parseFloat(pf.price), stock: parseInt(pf.stock), category: pf.category, badge: pf.badge || null, image_url: imageUrl || null, is_active: pf.is_active };
 
+      let productId: string;
       if (editingProduct) {
         const { error } = await supabase.from("products").update(productData).eq("id", editingProduct.id);
         if (error) throw error;
+        productId = editingProduct.id;
       } else {
-        const { error } = await supabase.from("products").insert(productData);
+        const { data, error } = await supabase.from("products").insert(productData).select().single();
         if (error) throw error;
+        productId = data.id;
+      }
+
+      // Upload additional images
+      if (additionalFiles.length > 0) {
+        const existingImages = editingProduct
+          ? (await (supabase as any).from("product_images").select("sort_order").eq("product_id", productId).order("sort_order", { ascending: false }).limit(1)).data
+          : [];
+        let sortOrder = existingImages?.[0]?.sort_order ?? 0;
+
+        for (const file of additionalFiles) {
+          const url = await uploadFile(file);
+          sortOrder++;
+          await (supabase as any).from("product_images").insert({ product_id: productId, image_url: url, sort_order: sortOrder });
+        }
       }
 
       qc.invalidateQueries({ queryKey: ["products-all"] });
       qc.invalidateQueries({ queryKey: ["products"] });
-      toast.success(editingProduct ? "Product updated!" : "Product added!");
+      toast.success(editingProduct ? t("productUpdated") : t("productAdded"));
       resetForm();
     } catch (err: any) { toast.error(err.message); }
   };
 
   const deleteProduct = async (id: string) => {
-    if (!confirm("Delete this product?")) return;
+    if (!confirm(t("deleteProductConfirm"))) return;
     await supabase.from("products").delete().eq("id", id);
     qc.invalidateQueries({ queryKey: ["products-all"] });
     qc.invalidateQueries({ queryKey: ["products"] });
-    toast.success("Product deleted!");
+    toast.success(t("productDeleted"));
   };
 
-  const resetForm = () => { setShowProductForm(false); setEditingProduct(null); setImageFile(null); setImageMode("url"); setPf({ name: "", description: "", price: "", stock: "", category: "Uncategorized", badge: "", image_url: "", is_active: true }); };
+  const resetForm = () => { setShowProductForm(false); setEditingProduct(null); setImageFile(null); setAdditionalFiles([]); setImageMode("url"); setPf({ name: "", description: "", price: "", stock: "", category: "Uncategorized", badge: "", image_url: "", is_active: true }); };
 
-  const startEdit = (p: any) => { setEditingProduct(p); setPf({ name: p.name, description: p.description || "", price: String(p.price), stock: String(p.stock), category: p.category, badge: p.badge || "", image_url: p.image_url || "", is_active: p.is_active }); setShowProductForm(true); };
+  const startEdit = (p: any) => { setEditingProduct(p); setPf({ name: p.name, description: p.description || "", price: String(p.price), stock: String(p.stock), category: p.category, badge: p.badge || "", image_url: p.image_url || "", is_active: p.is_active }); setShowProductForm(true); setAdditionalFiles([]); };
 
   const tabs = [
-    { id: "overview", label: "Overview" },
+    { id: "overview", label: t("overview") },
     { id: "products", label: t("productManagement") },
     { id: "orders", label: t("orders") },
   ] as const;
@@ -156,7 +178,7 @@ const Dashboard = () => {
               <textarea placeholder={t("description")} value={pf.description} onChange={(e) => setPf({ ...pf, description: e.target.value })}
                 className="w-full p-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary" rows={2} />
 
-              {/* Image mode toggle */}
+              {/* Main image */}
               <div className="flex gap-2">
                 <button onClick={() => setImageMode("url")} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs ${imageMode === "url" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
                   <LinkIcon className="w-3 h-3" /> URL
@@ -172,6 +194,18 @@ const Dashboard = () => {
                 <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                   className="w-full p-2.5 bg-background border border-border rounded-xl text-sm" />
               )}
+
+              {/* Additional images */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium mb-1">
+                  <ImagePlus className="w-4 h-4 text-primary" /> {t("addImages")}
+                </label>
+                <input type="file" accept="image/*" multiple onChange={(e) => setAdditionalFiles(Array.from(e.target.files || []))}
+                  className="w-full p-2.5 bg-background border border-border rounded-xl text-sm" />
+                {additionalFiles.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">{additionalFiles.length} {t("productImages").toLowerCase()}</p>
+                )}
+              </div>
 
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={pf.is_active} onChange={(e) => setPf({ ...pf, is_active: e.target.checked })} /> {t("active")}
@@ -206,7 +240,7 @@ const Dashboard = () => {
         <div>
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} placeholder="Search by ID, name, or email..."
+            <input value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} placeholder={t("searchByIdNameEmail")}
               className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:border-primary" />
           </div>
           <div className="space-y-3">
@@ -219,7 +253,7 @@ const Dashboard = () => {
                     <p className="text-xs text-muted-foreground">{order.customer_name} · {order.customer_email}</p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full ${order.status === "approved" ? "bg-green-500/20 text-green-500" : order.status === "denied" ? "bg-red-500/20 text-red-500" : "bg-yellow-500/20 text-yellow-500"}`}>
-                    {order.status}
+                    {t(order.status)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

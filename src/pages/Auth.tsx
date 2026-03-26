@@ -29,14 +29,14 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Check your email to verify your account!");
+        toast.success(t("checkEmailVerify"));
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: form.email,
           password: form.password,
         });
         if (error) throw error;
-        toast.success("Welcome back!");
+        toast.success(t("welcomeBack"));
         navigate("/");
       }
     } catch (err: any) {
@@ -47,12 +47,12 @@ const Auth = () => {
   };
 
   const handleForgotPassword = async () => {
-    if (!form.email) { toast.error("Please enter your email first"); return; }
+    if (!form.email) { toast.error(t("enterEmailFirst")); return; }
     const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) toast.error(error.message);
-    else toast.success("Password reset email sent!");
+    else toast.success(t("resetEmailSent"));
   };
 
   return (

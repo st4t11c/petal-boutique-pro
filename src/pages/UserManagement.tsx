@@ -13,7 +13,7 @@ const UserManagement = () => {
   const { t } = useLanguage();
   const qc = useQueryClient();
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ first_name: "", last_name: "", username: "", role: "user" as "admin" | "user" });
+  const [editForm, setEditForm] = useState({ first_name: "", last_name: "", username: "", phone: "", role: "user" as "admin" | "user" });
 
   if (!user || !isAdmin) return <Navigate to="/" />;
 
@@ -32,7 +32,7 @@ const UserManagement = () => {
 
   const startEdit = (p: any) => {
     setEditingUser(p);
-    setEditForm({ first_name: p.first_name || "", last_name: p.last_name || "", username: p.username || "", role: p.role || "user" });
+    setEditForm({ first_name: p.first_name || "", last_name: p.last_name || "", username: p.username || "", phone: p.phone || "", role: p.role || "user" });
   };
 
   const saveUser = async () => {
@@ -42,6 +42,7 @@ const UserManagement = () => {
         first_name: editForm.first_name,
         last_name: editForm.last_name,
         username: editForm.username,
+        phone: editForm.phone,
       }).eq("user_id", editingUser.user_id);
 
       if (editForm.role !== editingUser.role) {
@@ -53,17 +54,17 @@ const UserManagement = () => {
       }
 
       qc.invalidateQueries({ queryKey: ["all-profiles"] });
-      toast.success("User updated!");
+      toast.success(t("userUpdated"));
       setEditingUser(null);
     } catch (err: any) { toast.error(err.message); }
   };
 
   const deleteUser = async (userId: string) => {
-    if (!confirm("Delete this user? This cannot be undone.")) return;
+    if (!confirm(t("deleteUserConfirm"))) return;
     await supabase.from("profiles").delete().eq("user_id", userId);
     await supabase.from("user_roles").delete().eq("user_id", userId);
     qc.invalidateQueries({ queryKey: ["all-profiles"] });
-    toast.success("User removed!");
+    toast.success(t("userRemoved"));
   };
 
   return (
@@ -79,8 +80,8 @@ const UserManagement = () => {
               <Shield className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{p.first_name || p.username || "Unnamed"} {p.last_name || ""}</p>
-              <p className={`text-xs ${p.role === "admin" ? "text-primary" : "text-muted-foreground"}`}>{p.role}</p>
+              <p className="font-medium truncate">{p.first_name || p.username || t("user")} {p.last_name || ""}</p>
+              <p className={`text-xs ${p.role === "admin" ? "text-primary" : "text-muted-foreground"}`}>{t(p.role)}</p>
             </div>
             <button onClick={(e) => { e.stopPropagation(); startEdit(p); }} className="p-2 hover:bg-secondary rounded-lg"><Edit2 className="w-4 h-4" /></button>
             <button onClick={(e) => { e.stopPropagation(); deleteUser(p.user_id); }} className="p-2 hover:bg-destructive/10 rounded-lg text-destructive"><Trash2 className="w-4 h-4" /></button>
@@ -88,7 +89,6 @@ const UserManagement = () => {
         ))}
       </div>
 
-      {/* Edit Modal */}
       <AnimatePresence>
         {editingUser && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -113,6 +113,11 @@ const UserManagement = () => {
                 <div>
                   <label className="block text-sm mb-1">{t("username")}</label>
                   <input value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                    className="w-full p-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">{t("phone")}</label>
+                  <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                     className="w-full p-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary" />
                 </div>
                 <div>
