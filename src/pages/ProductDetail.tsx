@@ -52,7 +52,7 @@ const ProductDetail = () => {
   // Build all images array
   const allImages = [
     ...(product.image_url ? [product.image_url] : []),
-    ...extraImages.map((img) => img.image_url),
+    ...extraImages.map((img: any) => img.image_url),
   ];
 
   return (
