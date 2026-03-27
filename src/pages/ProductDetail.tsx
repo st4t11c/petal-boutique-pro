@@ -34,16 +34,16 @@ const ProductDetail = () => {
     enabled: !!id,
   });
 
-  // Fetch related products (same category)
-  const { data: relatedProducts = [] } = useQuery({
-    queryKey: ["related-products", product?.category, id],
+  // Fetch featured products (admin-curated)
+  const { data: featuredProducts = [] } = useQuery({
+    queryKey: ["featured-products", id],
     queryFn: async () => {
       const { data } = await supabase.from("products").select("*")
-        .eq("category", product!.category).eq("is_active", true)
+        .eq("is_featured", true).eq("is_active", true)
         .neq("id", id!).limit(4);
       return data || [];
     },
-    enabled: !!product?.category,
+    enabled: !!id,
   });
 
   if (isLoading) return <div className="container mx-auto px-4 py-8"><div className="h-96 bg-card animate-pulse rounded-2xl" /></div>;
@@ -120,12 +120,12 @@ const ProductDetail = () => {
         </motion.div>
       </div>
 
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
+      {/* Featured Products */}
+      {featuredProducts.length > 0 && (
         <section className="mt-16">
-          <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: "Space Grotesk" }}>{t("relatedProducts")}</h2>
+          <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: "Space Grotesk" }}>{t("featuredProducts")}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {relatedProducts.map((rp, i) => (
+            {featuredProducts.map((rp: any, i: number) => (
               <motion.div key={rp.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }} whileHover={{ y: -5 }}>
                 <Link to={`/products/${rp.id}`}

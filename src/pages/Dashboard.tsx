@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { Navigate } from "react-router-dom";
-import { Package, ShoppingCart, DollarSign, AlertTriangle, Search, Check, X, Plus, Edit2, Trash2, Upload, Link as LinkIcon, ImagePlus } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, AlertTriangle, Search, Check, X, Plus, Edit2, Trash2, Upload, Link as LinkIcon, ImagePlus, Star } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -21,7 +21,7 @@ const Dashboard = () => {
   const [imageMode, setImageMode] = useState<"url" | "upload">("url");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
-  const [pf, setPf] = useState({ name: "", description: "", price: "", stock: "", category: "Uncategorized", badge: "", image_url: "", is_active: true });
+  const [pf, setPf] = useState({ name: "", description: "", price: "", stock: "", category: "Uncategorized", badge: "", image_url: "", is_active: true, is_featured: false });
 
   if (!user || !isAdmin) return <Navigate to="/" />;
 
@@ -66,7 +66,7 @@ const Dashboard = () => {
         imageUrl = await uploadFile(imageFile);
       }
 
-      const productData = { name: pf.name, description: pf.description || null, price: parseFloat(pf.price), stock: parseInt(pf.stock), category: pf.category, badge: pf.badge || null, image_url: imageUrl || null, is_active: pf.is_active };
+      const productData = { name: pf.name, description: pf.description || null, price: parseFloat(pf.price), stock: parseInt(pf.stock), category: pf.category, badge: pf.badge || null, image_url: imageUrl || null, is_active: pf.is_active, is_featured: pf.is_featured };
 
       let productId: string;
       if (editingProduct) {
@@ -108,9 +108,9 @@ const Dashboard = () => {
     toast.success(t("productDeleted"));
   };
 
-  const resetForm = () => { setShowProductForm(false); setEditingProduct(null); setImageFile(null); setAdditionalFiles([]); setImageMode("url"); setPf({ name: "", description: "", price: "", stock: "", category: "Uncategorized", badge: "", image_url: "", is_active: true }); };
+  const resetForm = () => { setShowProductForm(false); setEditingProduct(null); setImageFile(null); setAdditionalFiles([]); setImageMode("url"); setPf({ name: "", description: "", price: "", stock: "", category: "Uncategorized", badge: "", image_url: "", is_active: true, is_featured: false }); };
 
-  const startEdit = (p: any) => { setEditingProduct(p); setPf({ name: p.name, description: p.description || "", price: String(p.price), stock: String(p.stock), category: p.category, badge: p.badge || "", image_url: p.image_url || "", is_active: p.is_active }); setShowProductForm(true); setAdditionalFiles([]); };
+  const startEdit = (p: any) => { setEditingProduct(p); setPf({ name: p.name, description: p.description || "", price: String(p.price), stock: String(p.stock), category: p.category, badge: p.badge || "", image_url: p.image_url || "", is_active: p.is_active, is_featured: p.is_featured ?? false }); setShowProductForm(true); setAdditionalFiles([]); };
 
   const tabs = [
     { id: "overview", label: t("overview") },
@@ -207,9 +207,15 @@ const Dashboard = () => {
                 )}
               </div>
 
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={pf.is_active} onChange={(e) => setPf({ ...pf, is_active: e.target.checked })} /> {t("active")}
-              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={pf.is_active} onChange={(e) => setPf({ ...pf, is_active: e.target.checked })} /> {t("active")}
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Star className={`w-4 h-4 ${pf.is_featured ? "text-primary fill-primary" : "text-muted-foreground"}`} />
+                  <input type="checkbox" checked={pf.is_featured} onChange={(e) => setPf({ ...pf, is_featured: e.target.checked })} /> {t("featured")}
+                </label>
+              </div>
 
               <div className="flex gap-2">
                 <button onClick={handleSaveProduct} className="px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm">{t("save")}</button>
